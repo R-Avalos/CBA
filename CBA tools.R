@@ -7,13 +7,13 @@ library("plm")
 library("stargazer")
 library("car")
 library("lubridate")
-
+library("ggplot2")
+library("directlabels")
 
 ### Load Data ####
 Accidents <- read.csv("Accidents.csv", stringsAsFactors=FALSE) # Partial Panel for test
 
-AccidentsPanel <- read.csv("Accidents2000_2005.csv", stringsAsFactors = FALSE) # Data from NHTSA, US Census, NIAA
-#AccidentsPanel$Direct.Ship <- as.factor(AccidentsPanel$Direct.Ship) #convert to factor
+AccidentsPanel <- read.csv("Accidents2000_2005.csv", stringsAsFactors = FALSE) # Data from NHTSA, US Census, NIAA, Note DTC is DTC for VA only and does not include other state's with DTC 
 AccidentsPanel$Number.Killed.in.Alcohol.Related.Crashes <- as.numeric(gsub(",", "", AccidentsPanel$Number.Killed.in.Alcohol.Related.Crashes)) #convert to numeric but remove commas to avoid NAs
 AccidentsPanel$Population..US.Census <- as.numeric(gsub(",", "", AccidentsPanel$Population..US.Census)) #convert to numeric but remove commas to avoid NAs
 summary(AccidentsPanel)
@@ -47,8 +47,8 @@ Price2004-Price2002
 model1 <- lm(log(Wine.Consumption.Million.Liters) ~ log(Mean.Price), VA) 
 summary(model1)
 
+
 stargazer(model1, output = "html", out = "model1.htm")
-stargazer(Accidents, output = "html", out = "accidentsummary.htm")
 
 # Change in Alcohol related deaths
 #coplot(Alcohol.Related.Vehicle.Accident.Fatalities ~ Year | State, type="b", data = Accidents) # test panel
@@ -65,11 +65,21 @@ scatterplot(Number.Killed.in.Alcohol.Related.Crashes ~ Year | State, boxplots=FA
 
 #testpanelLog <-  plm(log(Alcohol.Related.Vehicle.Accident.Fatalities) ~ Direct.Shipping.Lawful + log(Population.Millions) + log(Wine.Per.Capita.Consumption.Gallons) + log(Beer.Per.Capita.Consumption.Gallons) + log(Spirits.Per.Capita.Consumption.Gallons), index=c("Year", "State"), model="within", data = Accidents)
 
-panelm1 <-  plm(Number.Killed.in.Alcohol.Related.Crashes ~ Population..US.Census +Wine.Per.Capita + Beer.Per.Capita + Spirits.Per.Capita, index=c("Year", "State"), model="within", data = AccidentsPanel)
-summary(panelm1)
+panelm1 <-  plm(Number.Killed.in.Alcohol.Related.Crashes ~ Population..US.Census + Wine.Per.Capita + Beer.Per.Capita + Spirits.Per.Capita, index=c("Year", "State"), model="within", data = AccidentsPanel)
+summaryM1 <- summary(panelm1)
+summaryM1
 
-panelDirect <- plm(Wine.Per.Capita ~ I(Direct.Ship) + Population..US.Census + Beer.Per.Capita + Spirits.Per.Capita, index=c("Year", "State"), model="within", data = AccidentsPanel)
+panelm2 <-  plm(Number.Killed.in.Alcohol.Related.Crashes ~ Population..US.Census + Wine.Per.Capita + Beer.Per.Capita + Spirits.Per.Capita + I(Direct.Ship) , index=c("Year", "State"), model="within", data = AccidentsPanel)
+summaryM2 <- summary(panelm2)
+summaryM2
+
+
+
+panelDirect <- plm(Wine.Per.Capita ~ I(Direct.Ship) + Population..US.Census + Wine.Per.Capita + Beer.Per.Capita + Spirits.Per.Capita, index=c("Year", "State"), model="within", data = AccidentsPanel)
 summary(panelDirect)
+
+stargazer(AccidentsPanel, output = "html", out = "accidentsummary.htm")
+stargazer(panelm1, panelm2, output = "html", out = "summaryM1.htm")
 
 
 panelLogDirect <- plm(log(Wine.Per.Capita) ~ I(Direct.Ship) + log(Population..US.Census) + log(Beer.Per.Capita) + log(Spirits.Per.Capita), index=c("Year", "State"), model="within", data = AccidentsPanel)
@@ -105,4 +115,16 @@ summary(panelIV)
 
 stargazer(panelLog, output = "html", out = "panel.htm")
 
+z <- ggplot(data= AccidentsPanel, aes(x = Year, y = Number.Killed.in.Alcohol.Related.Crashes, group = State, color = State)) +
+        geom_line()+
+        theme_bw()
+direct.label(z, top.points)
 
+StateFacet <- ggplot(data= AccidentsPanel, aes(x = Year, y = Number.Killed.in.Alcohol.Related.Crashes, group = State)) +
+        geom_line() +
+        facet_wrap( ~ State) +
+        theme_bw()
+StateFacet
+
+VAgraph <- subset(AccidentsPanel, State == "VA")
+StateFacet + geom_line(data = VAgraph, color = "red")

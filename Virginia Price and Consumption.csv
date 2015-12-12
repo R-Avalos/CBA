@@ -1,0 +1,5 @@
+Seller,State,Year,Mean Price,Std. Dev Price,Min Price,Max Price,N Prices,Direct Shipping Lawful,Population Millions,Wine Per Capita Consumption Gallons,Beer Per Capita Consumption Gallons,Spirits Per Capita Consumption Gallons,Wine Consumption Million Gallons,Wine Consumption Million Liters,Alcohol Induced Death (CDC),Alcohol Related Vehicle Accidents DMV,Alcohol Vehicle Accident Per Capita,Alcohol Related Vehicle Accident Fatalities,Alcohol Vehicle Fatalities per Capita,DUI Convictions,BAC Average,Median Income 4 person family US Census
+Brick & Mortar,VA,2004,24.214,15.882,7.99,89.99,63,1,7.4756,0.37,1.14,0.54,2.765972,10.47033807,332,11504,0.001538873,343,0.000046,28471,0.1388,74290
+Online ,VA,2004,21.996,15.115,7.96,99.99,72,1,7.4756,0.37,1.14,0.54,2.765972,10.47033807,332,11504,0.001538873,343,0.000046,28471,0.1388,74290
+Brick & Mortar,VA,2002,28.29,23.916,8.49,169.99,68,0,7.2689,0.34,1.15,0.51,2.471426,9.355360695,330,11788,0.001621703,375,0.000052,27322,0.1382,66889
+Online ,VA,2002,25.969,20.98,7.97,129.99,79,0,7.2689,0.34,1.15,0.51,2.471426,9.355360695,330,11788,0.001621703,375,0.000052,27322,0.1382,66889
