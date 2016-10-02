@@ -8,21 +8,18 @@ library("stargazer")
 library("car")
 library("lubridate")
 library("ggplot2")
+library("ggthemes")
 library("directlabels")
 
 ### Load Data ####
 Accidents <- read.csv("Accidents.csv", stringsAsFactors=FALSE) # Partial Panel for test
-
 AccidentsPanel <- read.csv("Accidents2000_2005.csv", stringsAsFactors = FALSE) # Data from NHTSA, US Census, NIAA, Note DTC is DTC for VA only and does not include other state's with DTC 
-AccidentsPanel$Number.Killed.in.Alcohol.Related.Crashes <- as.numeric(gsub(",", "", AccidentsPanel$Number.Killed.in.Alcohol.Related.Crashes)) #convert to numeric but remove commas to avoid NAs
-AccidentsPanel$Population..US.Census <- as.numeric(gsub(",", "", AccidentsPanel$Population..US.Census)) #convert to numeric but remove commas to avoid NAs
-summary(AccidentsPanel)
-str(AccidentsPanel)
-
 VA <- read.csv("Virginia Price and Consumption.csv", stringsAsFactors = FALSE) # 2 year data set for demand function
 
 
-### Setup Data ###
+### Transform Data
+AccidentsPanel$Number.Killed.in.Alcohol.Related.Crashes <- as.numeric(gsub(",", "", AccidentsPanel$Number.Killed.in.Alcohol.Related.Crashes)) #convert to numeric but remove commas to avoid NAs
+AccidentsPanel$Population..US.Census <- as.numeric(gsub(",", "", AccidentsPanel$Population..US.Census)) #convert to numeric but remove commas to avoid NAs
 VA$Beer.Consumption.Million.Gallons <- VA$Beer.Per.Capita.Consumption.Gallons*VA$Population.Millions
 
 # Subset to Brick & Mortar and to Online
@@ -31,15 +28,50 @@ Online <- subset(VA, Seller=="Online")
 Year2002 <- subset(VA, Year==2002)
 Year2004 <- subset(VA, Year==2004)
 
-# Average prices by year including brick and mortar and onlie
-Price2002 <- mean(Year2002[["Mean.Price"]])
-Price2002
-Price2004 <- mean(Year2004[["Mean.Price"]])
-Price2004
+# Average prices by year
+year1 <- ymd("2002/1/1")
+year2 <- ymd("2004/1/1")
+years <- c(year(year1), year(year2))
+avg_price <- c(mean(Year2002[["Mean.Price"]]), 
+               mean(Year2004[["Mean.Price"]]))
+wine_percap <- c(mean(Year2002[["Wine.Per.Capita.Consumption.Gallons"]]), 
+                        mean(Year2004[["Wine.Per.Capita.Consumption.Gallons"]]))
+VAavg <- data.frame(years, avg_price, wine_percap) #setup dataframe for consumer surplus change
+
 # Change in Qunatity (million gallons), 0.37-.34 = 0.03
 # Change in Price = -$4.025
 Price2004-Price2002
+Price2002
 
+VAavg$avg_price[1]
+
+Positions <- data.frame(
+        quantity = c(0, 0, VAavg$wine_percap[2], VAavg$wine_percap[1]),
+        price = c(VAavg$avg_price[1], 
+              VAavg$avg_price[2], 
+              VAavg$avg_price[2], 
+              VAavg$avg_price[1]),
+        year = c(years[1], years[2], years[2], years[1])
+        )
+
+
+### Plot
+
+plot_consumer_surplus <- ggplot(Positions, aes(x = quantity, y = price, color)) +
+        geom_point(alpha = Positions$quantity) +
+        geom_polygon(fill = "blue", alpha = 0.25) +
+        scale_y_continuous(limits = c(0,40)) +
+        scale_x_continuous(limits = c(0, 0.5)) +
+        ylab("Mean Price per Gallon") +
+        xlab("Per Capita Consumption of Wine (Gallons)") +
+        ggtitle("Virginia Direct to Consumer Shipping \n Wine Price and Quantity 2002 and 2004") +
+        theme_tufte()
+
+plot_consumer_surplus <- plot_consumer_surplus + 
+        annotate("text", x = 0.345, y = 28, label = "2002") +
+        annotate("text", x = 0.375, y = 24, label = "2004")
+plot_consumer_surplus
+ggsave("plot_consumer_surplus.png", width = 8, height = 6)
 
 ### Models ####
 
